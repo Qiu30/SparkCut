@@ -7,10 +7,11 @@ from typing import Dict
 from sqlalchemy.orm import Session
 
 from .database import SessionLocal
+from .db_helpers import add_log
 from .models import Job
 from .pipeline import PipelineCancelled, run_job_pipeline
-from .services import add_log, utcnow
 from .settings import get_pipeline_settings
+from .utils import utcnow
 
 
 _job_queue: "queue.Queue[str]" = queue.Queue()
@@ -25,7 +26,7 @@ def _is_cancelled(db: Session, job: Job) -> bool:
     return job.status == "cancelled"
 
 
-def run_mock_job(job_id: str) -> None:
+def run_job(job_id: str) -> None:
     db = SessionLocal()
     try:
         job = db.get(Job, job_id)
@@ -66,7 +67,7 @@ def run_mock_job(job_id: str) -> None:
         db.close()
 
 
-def start_mock_job(job_id: str) -> None:
+def start_job(job_id: str) -> None:
     _ensure_worker_pool()
     with _lock:
         if job_id in _active_jobs or job_id in _queued_jobs:
@@ -97,7 +98,7 @@ def recover_incomplete_jobs(db: Session) -> int:
             job.started_at = None
             job.error_message = None
             add_log(db, job, "[系统] 检测到服务重启，任务已重新排队\n")
-        start_mock_job(job.id)
+        start_job(job.id)
     db.commit()
     return len(jobs)
 
@@ -119,7 +120,7 @@ def _worker_loop() -> None:
             _queued_jobs.discard(job_id)
             _active_jobs.add(job_id)
         try:
-            run_mock_job(job_id)
+            run_job(job_id)
         finally:
             with _lock:
                 _active_jobs.discard(job_id)

@@ -16,7 +16,6 @@ PROJECT_DIR = Path(__file__).resolve().parents[2]
 LOCAL_ENV_FILE = BACKEND_DIR / ".env"
 LOCAL_FFMPEG_BIN = PROJECT_DIR / "tools" / "ffmpeg" / "bin"
 RUNTIME_SETTING_KEYS = [
-    "VIDEO_CUT_PIPELINE_MODE",
     "VIDEO_CUT_LLM_ENDPOINT",
     "VIDEO_CUT_LLM_API_KEY",
     "VIDEO_CUT_LLM_MODEL",
@@ -115,12 +114,9 @@ def whisper_command_available(command: Optional[str]) -> bool:
 
 
 def get_pipeline_settings() -> PipelineSettings:
-    mode = os.environ.get("VIDEO_CUT_PIPELINE_MODE", "auto").lower()
-    if mode not in {"mock", "auto", "real"}:
-        mode = "auto"
     whisper_command = os.environ.get("VIDEO_CUT_WHISPER_COMMAND")
     return PipelineSettings(
-        mode=mode,
+        mode="real",
         max_concurrent_jobs=max(1, env_int("VIDEO_CUT_MAX_CONCURRENT_JOBS", 1)),
         recover_jobs=env_bool("VIDEO_CUT_RECOVER_JOBS", True),
         llm_endpoint=os.environ.get("VIDEO_CUT_LLM_ENDPOINT"),

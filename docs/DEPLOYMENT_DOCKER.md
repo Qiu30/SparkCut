@@ -60,7 +60,6 @@ docker compose up -d
 
 | 变量 | 说明 | 默认建议 |
 | --- | --- | --- |
-| `VIDEO_CUT_PIPELINE_MODE` | `auto`、`real`、`mock` | `auto` |
 | `VIDEO_CUT_LLM_ENDPOINT` | OpenAI-compatible LLM URL；普通地址自动补 `/v1/chat/completions`，以 `/` 结尾不补 `/v1`，以 `#` 结尾强制使用原地址 | CodingPlan `/v1` 地址 |
 | `VIDEO_CUT_LLM_API_KEY` | LLM API key | 必填，不能提交 |
 | `VIDEO_CUT_LLM_MODEL` | 默认模型 | `GLM-5.1` |
@@ -75,7 +74,7 @@ docker compose up -d
 | `VIDEO_CUT_MAX_CONCURRENT_JOBS` | 并发任务数 | `1` |
 | `VIDEO_CUT_MAX_VIDEO_BYTES` | 单视频大小上限 | `2147483648` |
 
-生产环境建议先使用 `auto`。确认 LLM、Whisper、ffmpeg 都正常后，再切到 `real`。
+生产环境需要确认 LLM、Whisper 和 ffmpeg 都正常后再提交任务。
 
 ## 4. 挂载目录
 
@@ -151,7 +150,7 @@ docker compose down
 - nginx 已设置 `client_max_body_size 2048m`，与默认 2 GB 上传限制匹配。
 - 本部署是单机 SQLite 方案，适合内部使用和轻量生产；多用户高并发后建议升级为 Postgres、对象存储和独立任务队列。
 - 若开启 `VIDEO_CUT_BUILD_WITH_WHISPER=true`，首次 Whisper 任务会慢一些，因为需要下载模型到 `deploy/model-cache/`。
-- `real` 模式缺少 LLM key、Whisper 或 ffmpeg 时会阻止任务；`auto` 模式会提示并降级。
+- 缺少 LLM key、Whisper 或 ffmpeg 时会阻止任务并记录错误。
 
 ## 7. 健康检查
 

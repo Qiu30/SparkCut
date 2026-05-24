@@ -39,7 +39,7 @@
 
 当前版本无登录、单机单租户。测试时可直接通过 UI 或 API 创建工作空间。涉及真实 AI 的用例必须通过环境变量配置：
 
-- `VIDEO_CUT_PIPELINE_MODE=auto|real`
+- 配置真实 pipeline 所需的 LLM、Whisper、ffmpeg
 - `VIDEO_CUT_LLM_ENDPOINT`
 - `VIDEO_CUT_LLM_API_KEY`
 - `VIDEO_CUT_LLM_MODEL`
@@ -54,12 +54,12 @@ API key 不允许写入代码、截图、日志或提交记录。
 | 工作空间管理 | 列表、新建、进入、持久化、空状态 | 当前可执行 |
 | 素材上传与管理 | 多格式、多文件、metadata、删除、排序、异常文件 | 当前可执行，部分异常需构造 |
 | 混剪配置 | 结构化参数、自然语言、模型、包装配置 | 当前可执行 |
-| 审查规则 | 模板、输入快照、审查状态、审查报告 | 当前可执行，阻断需 mock/未来 |
+| 审查规则 | 模板、输入快照、审查状态、审查报告 | 当前可执行，阻断需人工复核/未来 |
 | 模板系统 | 选择、新增、删除、复制、默认、最近使用 | 当前可执行 |
 | 任务系统 | 提交、进度、日志、取消、重试、复制、快照 | 当前可执行 |
 | 输出结果 | 播放、下载、无 MP4 空态、反馈 | 当前可执行 |
 | AI 可解释 | 摘要、时间线、排除、审查报告、方案对比 | 当前可执行 |
-| v0.4 Pipeline | mock/auto/real、ffmpeg、LLM、Whisper、队列恢复 | 条件可执行 |
+| v0.4 Pipeline | real pipeline、ffmpeg、LLM、Whisper、队列恢复 | 条件可执行 |
 | 视觉与体验 | 1280x720、长文本、空态、确认、滚动 | 当前可执行 |
 | 非功能 | 性能、稳定性、可追溯、安全边界 | 当前可执行 + 条件可执行 |
 | P2 成熟能力 | 多用户、权限、分享、计费、在线精修 | 未来预留 |
@@ -71,7 +71,7 @@ API key 不允许写入代码、截图、日志或提交记录。
 | SMOKE-001 | P0 | 端到端演示闭环 | 打开首页，新建工作空间，上传 MP4，选择剪辑模板和审查模板，提交任务，等待完成，播放输出，下载输出，复制配置，取消复制任务 | 工作空间创建成功；素材显示 metadata；任务从排队/执行到完成；日志完整；输出播放器和下载链接可用；复制任务可取消 |
 | SMOKE-002 | P0 | 页面刷新恢复 | 在任务完成后刷新浏览器，重新进入同一工作空间，点击历史任务 | 工作空间、素材、历史任务、日志、输入快照、输出结果仍可查看 |
 | SMOKE-003 | P0 | 无 MP4 输出闭环 | 上传非 MP4 但支持格式素材，提交任务 | 任务完成；无可预览 MP4 时展示“任务完成但无可预览视频”类空状态；日志保留 |
-| SMOKE-004 | P0 | v0.4 auto 降级闭环 | 设置 `VIDEO_CUT_PIPELINE_MODE=auto` 且不安装 ffmpeg/LLM/Whisper，跑完整任务 | 状态栏显示 Auto、AI mock、FFmpeg mock；日志说明 ASR/LLM/ffmpeg 降级；任务仍完成 |
+| SMOKE-004 | P0 | v0.4 缺配置阻断 | 不配置 ffmpeg/LLM/Whisper，提交任务 | 状态接口列出 blocking requirements；任务失败并记录缺失原因 |
 
 ## 5. 工作空间管理
 
@@ -101,7 +101,7 @@ API key 不允许写入代码、截图、日志或提交记录。
 | MAT-009 | P0 | 拖拽排序 | 至少两个素材 | 将第二个素材拖到第一位后提交任务 | UI 顺序更新；任务输入快照按新顺序保存 |
 | MAT-010 | P0 | 删除后快照排除 | 已上传两个素材，删除一个 | 提交任务并查看输入快照 | 已删除素材不出现在快照中 |
 | MAT-011 | P1 | 后端 ffprobe 探查 | 环境安装 ffprobe | 上传视频且不传浏览器 metadata | 后端填充时长、分辨率、音频状态，`probe_status=ffprobe` |
-| MAT-012 | P1 | ffprobe 不可用降级 | 环境无 ffprobe | 上传视频 | 不阻塞上传；使用浏览器 metadata 或标记 unknown |
+| MAT-012 | P1 | ffprobe 不可用兼容 | 环境无 ffprobe | 上传视频 | 不阻塞上传；使用浏览器 metadata 或标记 unknown |
 | MAT-013 | P1 | 损坏视频 | 已进入工作空间 | 上传 `broken.mp4` | 上传可按策略失败或标记 unreadable；错误/状态清晰 |
 | MAT-014 | P1 | 无音频视频提示 | 已进入工作空间 | 上传 `no_audio.mp4` | 音频状态展示 missing 或 unknown；不误导为有音频 |
 | MAT-015 | P1 | 文件名重复 | 已有 `valid_01.mp4` | 再次上传同名文件 | 文件可存储为唯一名称；UI 展示不混淆 |
@@ -154,7 +154,7 @@ API key 不允许写入代码、截图、日志或提交记录。
 | PKG-003 | P0 | 角标开关 | 工作空间有素材 | 开关角标后提交 | 布尔值进入输入快照 |
 | PKG-004 | P0 | 片尾开关 | 工作空间有素材 | 开关片尾后提交 | 布尔值进入输入快照 |
 | PKG-005 | P0 | 包装为空默认策略 | 剧名为空，颜色默认 | 提交任务 | 任务成功；快照保存默认包装参数 |
-| PKG-006 | 条件 P1 | ffmpeg 包装实际生效 | 安装 ffmpeg，`PIPELINE_MODE=auto/real` | 提交带剧名/角标任务 | 输出文件包含基础 drawtext 包装或日志说明包装动作 |
+| PKG-006 | 条件 P1 | ffmpeg 包装实际生效 | 安装 ffmpeg，配置真实 pipeline | 提交带剧名/角标任务 | 输出文件包含基础 drawtext 包装或日志说明包装动作 |
 | PKG-007 | Future | 字幕位置/字号/描边 | P1 包装配置上线 | 调整高级包装参数 | 输出或预览体现参数 |
 | PKG-008 | Future | 角标/片尾素材上传 | P1 包装素材上线 | 上传角标或片尾素材并提交 | 输出使用用户素材 |
 
@@ -222,7 +222,7 @@ API key 不允许写入代码、截图、日志或提交记录。
 | EXP-004 | P1 | 审查报告 | 任务完成 | 查看审查报告 | 展示 status、risk_level、model、规则项 |
 | EXP-005 | P1 | 方案对比 | 输出数量大于 1 | 提交任务查看方案对比 | 展示多个方案的时长、片段数、优势和取舍 |
 | EXP-006 | P1 | 无解释数据空态 | 取消任务或旧任务无解释 | 查看 AI 解释区 | 显示任务完成后生成方案解释或暂无可解释数据 |
-| EXP-007 | P1 | LLM 解析失败降级 | `PIPELINE_MODE=auto`，LLM 返回非 JSON | 提交任务 | 日志记录 LLM 失败/未解析；仍生成 mock 解释 |
+| EXP-007 | P1 | LLM 解析失败 | LLM 返回非 JSON | 提交任务 | 任务失败并记录 LLM 返回无效 JSON |
 | EXP-008 | P1 | `real` 模式 LLM 缺失失败 | `PIPELINE_MODE=real` 且未配 key/endpoint | 提交任务 | 任务失败，错误说明缺少 LLM endpoint/key |
 
 ## 15. 输出结果与结果反馈
@@ -247,16 +247,15 @@ API key 不允许写入代码、截图、日志或提交记录。
 | ID | 优先级 | 场景 | 前置条件 | 步骤 | 预期结果 |
 |---|---|---|---|---|---|
 | PIPE-001 | P0 | Pipeline 状态接口 | 服务运行 | 请求 `/api/pipeline/status` | 返回 mode、ffmpeg、ffprobe、LLM、Whisper、queue、active、worker 信息 |
-| PIPE-002 | P0 | 生产化顶部栏 | 打开首页/详情页 | 查看顶部栏 | 不显示 Mock/Auto/Real、AI ready/mock、FFmpeg ready/mock；缺少关键配置时仅在任务相关区域显示运行提醒 |
-| PIPE-003 | P0 | mock 模式 | `VIDEO_CUT_PIPELINE_MODE=mock` | 提交任务 | 全程 mock，任务完成，日志为 Pipeline/Mock 信息 |
-| PIPE-004 | P0 | auto 模式无依赖降级 | `PIPELINE_MODE=auto` 且无 ffmpeg/LLM/Whisper | 提交任务 | 任务完成，日志明确每个降级原因 |
+| PIPE-002 | P0 | 生产化顶部栏 | 打开首页/详情页 | 查看顶部栏 | 不显示模式切换或假输出状态；缺少关键配置时仅在任务相关区域显示运行提醒 |
+| PIPE-003 | P0 | 真实 pipeline 缺依赖 | 不配置 ffmpeg/LLM/Whisper | 提交任务 | 任务失败，日志明确缺失原因 |
 | PIPE-005 | P0 | real 模式无 LLM 失败 | `PIPELINE_MODE=real`，不配置 LLM | 提交任务 | 任务失败，错误不含密钥，日志说明缺少 LLM |
 | PIPE-006 | 条件 P1 | LLM 成功生成解释 | 配置 CodingPlan-compatible endpoint/key | 提交任务 | 调用 `/chat/completions` 成功，解释数据使用 LLM 返回内容或标记 llm_source |
-| PIPE-007 | 条件 P1 | LLM HTTP 错误 | endpoint 返回 401/500 | auto/real 各提交一次 | auto 降级；real 失败；日志不泄露 key |
+| PIPE-007 | 条件 P1 | LLM HTTP 错误 | endpoint 返回 401/500 | 提交一次 | 任务失败；日志不泄露 key |
 | PIPE-008 | 条件 P1 | Whisper 命令成功 | 配置有效 `VIDEO_CUT_WHISPER_COMMAND` | 提交任务 | ASR 阶段执行命令并记录完成 |
-| PIPE-009 | 条件 P1 | Whisper 命令失败 | 配置返回非 0 的命令 | auto/real 各提交一次 | auto 降级；real 失败 |
-| PIPE-010 | 条件 P1 | ffmpeg 合成成功 | 安装 ffmpeg，auto 或 real | 提交 MP4 任务 | 生成 `real_cut.mp4` 或真实输出；可播放下载 |
-| PIPE-011 | 条件 P1 | ffmpeg 合成失败 | 安装 ffmpeg 但输入损坏 | auto/real 各提交一次 | auto 降级或失败按策略；real 失败 |
+| PIPE-009 | 条件 P1 | Whisper 命令失败 | 配置返回非 0 的命令 | 提交一次 | 任务失败 |
+| PIPE-010 | 条件 P1 | ffmpeg 合成成功 | 安装 ffmpeg | 提交 MP4 任务 | 生成 `real_cut.mp4` 或真实输出；可播放下载 |
+| PIPE-011 | 条件 P1 | ffmpeg 合成失败 | 安装 ffmpeg 但输入损坏 | 提交一次 | 任务失败 |
 | PIPE-012 | P0 | 并发限制 | `MAX_CONCURRENT_JOBS=1` | 快速提交 3 个任务 | 一次只运行一个，其余排队；状态接口队列正确 |
 | PIPE-013 | P0 | 启动恢复 | 运行中任务时杀掉后端再启动 | 查看任务 | 任务重新排队，日志记录服务重启恢复 |
 | PIPE-014 | P0 | 取消队列/运行任务 | 有排队或运行任务 | 点击取消 | worker 检查取消标记并停止推进 |
@@ -374,7 +373,7 @@ API key 不允许写入代码、截图、日志或提交记录。
 - 日志 offset。
 - 输出下载。
 - 反馈接口。
-- pipeline status、auto 降级、real 缺配置失败。
+- pipeline status、真实 pipeline 缺配置失败。
 
 ### 22.2 前端组件/交互测试
 
@@ -394,7 +393,7 @@ API key 不允许写入代码、截图、日志或提交记录。
 - `e2e/demo-loop.spec.ts`：标准闭环。
 - `e2e/materials.spec.ts`：上传、删除、排序。
 - `e2e/templates.spec.ts`：模板保存、复制、默认、删除。
-- `e2e/pipeline.spec.ts`：mock/auto 状态栏和降级日志。
+- `e2e/pipeline.spec.ts`：真实 pipeline 状态栏和缺配置日志。
 - `e2e/layout.spec.ts`：1280x720 截图对比。
 
 ## 23. 退出准则

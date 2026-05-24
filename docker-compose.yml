@@ -9,7 +9,6 @@ services:
     environment:
       VIDEO_CUT_DB_URL: ${VIDEO_CUT_DB_URL:-sqlite:////app/data/videocut.db}
       VIDEO_CUT_STORAGE_DIR: ${VIDEO_CUT_STORAGE_DIR:-/app/storage}
-      VIDEO_CUT_PIPELINE_MODE: ${VIDEO_CUT_PIPELINE_MODE:-auto}
       VIDEO_CUT_LLM_ENDPOINT: ${VIDEO_CUT_LLM_ENDPOINT:-}
       VIDEO_CUT_LLM_API_KEY: ${VIDEO_CUT_LLM_API_KEY:-}
       VIDEO_CUT_LLM_MODEL: ${VIDEO_CUT_LLM_MODEL:-GLM-5.1}

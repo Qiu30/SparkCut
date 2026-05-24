@@ -1,6 +1,6 @@
 # SparkCut 智能视频混剪工作台
 
-这是 PRD v2 的分迭代实现。当前采用 `FastAPI + React`，使用 SQLite 和本地 `storage/`。默认保持 mock pipeline 方便演示；如果配置了 ffmpeg、Whisper 命令和 OpenAI-compatible Chat Completions 接口，可以切到 `auto` 或 `real` 模式接入真实能力。
+这是 PRD v2 的分迭代实现。当前采用 `FastAPI + React`，使用 SQLite 和本地 `storage/`。Pipeline 已收敛为真实运行路径，需要配置 ffmpeg、Whisper 命令和 OpenAI-compatible Chat Completions 接口后执行任务。
 
 ## Docker 生产部署
 
@@ -45,16 +45,9 @@ npm run build
 
 ## v0.4 Pipeline 配置
 
-默认值可以直接运行演示闭环：
-
-```powershell
-$env:VIDEO_CUT_PIPELINE_MODE="mock"
-```
-
 接入真实能力时使用环境变量，不要把 API key 写入代码或提交：
 
 ```powershell
-$env:VIDEO_CUT_PIPELINE_MODE="auto" # mock | auto | real
 $env:VIDEO_CUT_LLM_ENDPOINT="https://wishub-x6.ctyun.cn/coding/v1"
 $env:VIDEO_CUT_LLM_API_KEY="<your-api-key>"
 $env:VIDEO_CUT_LLM_MODEL="GLM-5.1"
@@ -64,7 +57,7 @@ $env:VIDEO_CUT_FFMPEG_TIMEOUT_SECONDS="600"
 $env:VIDEO_CUT_MAX_CONCURRENT_JOBS="1"
 ```
 
-`auto` 会在能力缺失时降级为 mock 输出；`real` 会在缺少 ffmpeg、LLM 或 ASR 配置时让任务失败并记录原因。`GET /api/pipeline/status` 可查看当前 pipeline 模式、ffmpeg/ffprobe、LLM、Whisper 和队列状态。
+缺少 ffmpeg、LLM 或 ASR 配置时，任务会失败并记录原因。`GET /api/pipeline/status` 可查看当前 pipeline、ffmpeg/ffprobe、LLM、Whisper 和队列状态。
 
 LLM 地址兼容 OpenAI-compatible 写法：普通 host/path 会自动补 `/v1/chat/completions`；以 `/` 结尾时不自动补 `/v1`；以 `#` 结尾时强制使用输入地址。
 
@@ -87,7 +80,7 @@ LLM 地址兼容 OpenAI-compatible 写法：普通 host/path 会自动补 `/v1/c
 - 素材探查：如果本机存在 `ffprobe`，后端会补充提取时长、分辨率和音频状态；否则继续使用浏览器 metadata。
 - 模板生产力：支持模板最近使用、复制模板、设为默认模板。
 - 任务追溯：任务列表和详情展示耗时，日志区可展开输入快照。
-- 输出命名：演示输出使用统一 `videocut_<jobId>_demo_cut.mp4` 命名。
+- 输出命名：真实合成输出使用统一 `videocut_<jobId>_real_cut.mp4` 命名。
 - 存储概览：`GET /api/storage/summary` 返回素材、输出和占用空间统计。
 
 ## v0.3 AI 可解释
@@ -97,8 +90,8 @@ LLM 地址兼容 OpenAI-compatible 写法：普通 host/path 会自动补 `/v1/c
 
 ## v0.4 真实 Pipeline 基础
 
-- 引入可插拔 pipeline：mock、auto、real 三种模式。
-- 预留 OpenAI-compatible LLM 适配，可用 CodingPlan endpoint 生成可解释方案。
-- 预留 Whisper 命令接入；未配置时按模式降级或失败。
-- 检测 ffmpeg 后可进行真实 MP4 裁剪、转码和基础包装；未安装时 auto 模式降级为 mock 输出。
+- Pipeline 收敛为真实运行路径。
+- OpenAI-compatible LLM 适配可用 CodingPlan endpoint 生成可解释方案。
+- Whisper 命令负责真实 ASR；未配置时任务失败。
+- ffmpeg 负责真实 MP4 裁剪、转码和基础包装；未安装时任务失败。
 - in-process 队列支持并发上限、队列状态、启动恢复未完成任务。后续可以替换为 Redis + RQ/Celery。

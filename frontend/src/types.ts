@@ -221,7 +221,6 @@ export interface RuntimeSettings {
 }
 
 export interface RuntimeSettingsUpdate {
-  pipeline_mode?: string;
   llm_endpoint?: string;
   llm_api_key?: string;
   llm_model?: string;

@@ -9,6 +9,7 @@ dependencies = [
   "sqlalchemy==2.0.36",
   "python-multipart==0.0.20",
   "pydantic==2.10.4",
+  "openai-whisper>=20250625",
 ]
 
 [dependency-groups]

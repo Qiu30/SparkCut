@@ -184,7 +184,6 @@ class RuntimeSettingsOut(BaseModel):
 
 
 class RuntimeSettingsUpdate(BaseModel):
-    pipeline_mode: Optional[str] = None
     llm_endpoint: Optional[str] = None
     llm_api_key: Optional[str] = None
     llm_model: Optional[str] = None
