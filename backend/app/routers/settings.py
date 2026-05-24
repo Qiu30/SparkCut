@@ -53,6 +53,7 @@ def _runtime_settings_payload() -> dict:
         "llm_api_key_preview": _api_key_preview(api_key),
         "llm_model": settings.llm_model,
         "llm_models": models if isinstance(models, list) else [],
+        "llm_timeout_seconds": settings.llm_timeout_seconds,
         "default_whisper_model": settings.default_whisper_model,
         "asr_clip_seconds": settings.asr_clip_seconds,
     }
@@ -72,6 +73,8 @@ def update_runtime_settings(payload: RuntimeSettingsUpdate):
         updates["VIDEO_CUT_LLM_API_KEY"] = payload.llm_api_key.strip()
     if payload.llm_model is not None:
         updates["VIDEO_CUT_LLM_MODEL"] = payload.llm_model.strip()
+    if payload.llm_timeout_seconds is not None:
+        updates["VIDEO_CUT_LLM_TIMEOUT_SECONDS"] = max(5, payload.llm_timeout_seconds)
     if payload.default_whisper_model is not None:
         updates["VIDEO_CUT_DEFAULT_WHISPER_MODEL"] = payload.default_whisper_model.strip()
     if payload.asr_clip_seconds is not None:

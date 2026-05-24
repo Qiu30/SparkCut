@@ -19,6 +19,7 @@ RUNTIME_SETTING_KEYS = [
     "VIDEO_CUT_LLM_ENDPOINT",
     "VIDEO_CUT_LLM_API_KEY",
     "VIDEO_CUT_LLM_MODEL",
+    "VIDEO_CUT_LLM_TIMEOUT_SECONDS",
     "VIDEO_CUT_DEFAULT_WHISPER_MODEL",
     "VIDEO_CUT_ASR_CLIP_SECONDS",
 ]
@@ -121,7 +122,7 @@ def get_pipeline_settings() -> PipelineSettings:
         recover_jobs=env_bool("VIDEO_CUT_RECOVER_JOBS", True),
         llm_endpoint=os.environ.get("VIDEO_CUT_LLM_ENDPOINT"),
         llm_model=os.environ.get("VIDEO_CUT_LLM_MODEL", DEFAULT_LLM_MODEL),
-        llm_timeout_seconds=max(5, env_int("VIDEO_CUT_LLM_TIMEOUT_SECONDS", 45)),
+        llm_timeout_seconds=max(5, env_int("VIDEO_CUT_LLM_TIMEOUT_SECONDS", 300)),
         whisper_command=whisper_command,
         default_whisper_model=os.environ.get("VIDEO_CUT_DEFAULT_WHISPER_MODEL", DEFAULT_WHISPER_MODEL),
         asr_language=os.environ.get("VIDEO_CUT_ASR_LANGUAGE", "zh"),

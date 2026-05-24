@@ -216,6 +216,7 @@ export interface RuntimeSettings {
   llm_api_key_preview: string;
   llm_model: string;
   llm_models: string[];
+  llm_timeout_seconds: number;
   default_whisper_model: string;
   asr_clip_seconds: number;
 }
@@ -224,6 +225,7 @@ export interface RuntimeSettingsUpdate {
   llm_endpoint?: string;
   llm_api_key?: string;
   llm_model?: string;
+  llm_timeout_seconds?: number;
   default_whisper_model?: string;
   asr_clip_seconds?: number;
 }

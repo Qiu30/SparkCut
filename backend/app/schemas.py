@@ -179,6 +179,7 @@ class RuntimeSettingsOut(BaseModel):
     llm_api_key_preview: str = ""
     llm_model: str
     llm_models: List[str] = Field(default_factory=list)
+    llm_timeout_seconds: int
     default_whisper_model: str
     asr_clip_seconds: float
 
@@ -187,5 +188,6 @@ class RuntimeSettingsUpdate(BaseModel):
     llm_endpoint: Optional[str] = None
     llm_api_key: Optional[str] = None
     llm_model: Optional[str] = None
+    llm_timeout_seconds: Optional[int] = None
     default_whisper_model: Optional[str] = None
     asr_clip_seconds: Optional[float] = None

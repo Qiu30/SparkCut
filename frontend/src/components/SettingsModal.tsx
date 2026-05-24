@@ -80,6 +80,16 @@ export function SettingsModal({
                 onChange={(event) => setSettingsApiKey(event.target.value)}
               />
             </label>
+            <label className="field">
+              <span>LLM 超时秒数</span>
+              <input
+                type="number"
+                min={5}
+                value={settingsDraft.llm_timeout_seconds}
+                onChange={(event) => setSettingsDraft({ ...settingsDraft, llm_timeout_seconds: Number(event.target.value) })}
+              />
+              <small className="field-hint">默认 300 秒。保存后新任务会立即使用新的超时时间。</small>
+            </label>
           </section>
 
           <section className="settings-section">

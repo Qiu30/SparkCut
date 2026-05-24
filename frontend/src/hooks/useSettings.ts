@@ -39,6 +39,7 @@ export function useSettings({ loadPipelineStatus, loadLlmModels, setError }: Use
         llm_endpoint: settingsDraft.llm_endpoint,
         llm_api_key: settingsApiKey,
         llm_model: settingsDraft.llm_model,
+        llm_timeout_seconds: settingsDraft.llm_timeout_seconds,
         default_whisper_model: settingsDraft.default_whisper_model,
         asr_clip_seconds: settingsDraft.asr_clip_seconds,
       });

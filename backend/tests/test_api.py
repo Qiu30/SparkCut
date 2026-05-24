@@ -68,6 +68,7 @@ def make_client(tmp_path, monkeypatch, *, pipeline_ready: bool = False, clear_pi
             "VIDEO_CUT_LLM_API_KEY",
             "VIDEO_CUT_LLM_ENDPOINT",
             "VIDEO_CUT_LLM_MODEL",
+            "VIDEO_CUT_LLM_TIMEOUT_SECONDS",
             "VIDEO_CUT_WHISPER_COMMAND",
             "VIDEO_CUT_FFMPEG_PATH",
             "VIDEO_CUT_FFPROBE_PATH",
@@ -79,6 +80,7 @@ def make_client(tmp_path, monkeypatch, *, pipeline_ready: bool = False, clear_pi
         if name.startswith("app."):
             del sys.modules[name]
     module = importlib.import_module("app.main")
+    monkeypatch.setattr(module, "read_local_env_values", lambda: {})
     module.on_startup()
     return TestClient(module.app)
 
@@ -304,6 +306,11 @@ def test_template_productivity_actions_and_storage_summary(tmp_path, monkeypatch
     assert models["models"] == []
     assert models["default_model"] == "GLM-5.1"
     assert models["source"] == "fallback"
+
+    runtime = client.get("/api/settings/runtime").json()
+    assert runtime["llm_timeout_seconds"] == 300
+    updated = client.put("/api/settings/runtime", json={"llm_timeout_seconds": 120}).json()
+    assert updated["llm_timeout_seconds"] == 120
 
 
 def test_real_timeline_clip_plan_uses_multiple_materials(tmp_path, monkeypatch):
