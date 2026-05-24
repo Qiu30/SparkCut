@@ -1,0 +1,22 @@
+[project]
+name = "videocut-backend"
+version = "0.1.0"
+description = "FastAPI backend for the SparkCut v0.1 demo loop"
+requires-python = ">=3.9"
+dependencies = [
+  "fastapi==0.115.6",
+  "uvicorn[standard]==0.34.0",
+  "sqlalchemy==2.0.36",
+  "python-multipart==0.0.20",
+  "pydantic==2.10.4",
+]
+
+[dependency-groups]
+dev = [
+  "pytest==8.3.4",
+  "httpx==0.28.1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

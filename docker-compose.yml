@@ -1,0 +1,48 @@
+name: sparkcut
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+      args:
+        INSTALL_LOCAL_WHISPER: ${VIDEO_CUT_BUILD_WITH_WHISPER:-false}
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      VIDEO_CUT_DB_URL: ${VIDEO_CUT_DB_URL:-sqlite:////app/data/videocut.db}
+      VIDEO_CUT_STORAGE_DIR: ${VIDEO_CUT_STORAGE_DIR:-/app/storage}
+      VIDEO_CUT_PIPELINE_MODE: ${VIDEO_CUT_PIPELINE_MODE:-auto}
+      VIDEO_CUT_LLM_ENDPOINT: ${VIDEO_CUT_LLM_ENDPOINT:-}
+      VIDEO_CUT_LLM_API_KEY: ${VIDEO_CUT_LLM_API_KEY:-}
+      VIDEO_CUT_LLM_MODEL: ${VIDEO_CUT_LLM_MODEL:-GLM-5.1}
+      VIDEO_CUT_ASR_TIMEOUT_SECONDS: ${VIDEO_CUT_ASR_TIMEOUT_SECONDS:-300}
+      VIDEO_CUT_FFMPEG_TIMEOUT_SECONDS: ${VIDEO_CUT_FFMPEG_TIMEOUT_SECONDS:-600}
+      VIDEO_CUT_MAX_CONCURRENT_JOBS: ${VIDEO_CUT_MAX_CONCURRENT_JOBS:-1}
+      VIDEO_CUT_RECOVER_JOBS: ${VIDEO_CUT_RECOVER_JOBS:-true}
+      VIDEO_CUT_MAX_VIDEO_BYTES: ${VIDEO_CUT_MAX_VIDEO_BYTES:-2147483648}
+      VIDEO_CUT_MAX_WORKSPACE_MATERIALS: ${VIDEO_CUT_MAX_WORKSPACE_MATERIALS:-100}
+      VIDEO_CUT_MAX_JOB_MATERIALS: ${VIDEO_CUT_MAX_JOB_MATERIALS:-100}
+    volumes:
+      - ./deploy/data:/app/data
+      - ./deploy/storage:/app/storage
+      - ./deploy/model-cache:/app/model-cache
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=5)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${VIDEO_CUT_WEB_PORT:-8080}:80"
+    restart: unless-stopped
